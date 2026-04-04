@@ -148,6 +148,23 @@ public class MainScreen extends JFrame {
                     }
                 });
             }
+            if(name.equals("Browse"))
+            {
+                btn.addActionListener(e -> {
+                    int selectedRow = table.getSelectedRow();
+                    if (selectedRow == -1) {
+                        JOptionPane.showMessageDialog(this, "Please select a deck first!");
+                        return;
+                    }
+
+                    int deckId = (int) table.getValueAt(selectedRow, 0);
+                    String deckName = (String) table.getValueAt(selectedRow, 1);
+
+                    // mở màn hình CardScreen
+                    new CardScreen(deckId, deckName);
+
+                });
+            }
 
             toolBar.add(btn);
         }
