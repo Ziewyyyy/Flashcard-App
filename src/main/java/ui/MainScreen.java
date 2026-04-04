@@ -1,6 +1,7 @@
 package ui;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import database.CardDAO;
 import database.DeckDAO;
 import database.InitDB;
 
@@ -34,8 +35,17 @@ public class MainScreen extends JFrame {
         String[] columns = {"ID", "Deck", "Amount", "Learn", "⚙"};
         Object[][] data = {};
 
-        DefaultTableModel model = new DefaultTableModel(data, columns);
+        DefaultTableModel model = new DefaultTableModel(data, columns){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 1;
+            }
+        };
         JTable table = new JTable(model);
+        for(Object[] row : DeckDAO.getAllDecks())
+        {
+            model.addRow(row);
+        }
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
@@ -99,6 +109,7 @@ public class MainScreen extends JFrame {
             btn.setPreferredSize(new Dimension(100, 40));
             btn.setFocusPainted(false);
 
+            //Add card
             if(name.equals("Add"))
             {
                 btn.addActionListener(e -> {
@@ -108,6 +119,8 @@ public class MainScreen extends JFrame {
                         JOptionPane.showMessageDialog(this, "Please select a deck first!");
                         return;
                     }
+                    int deckId = (int) table.getValueAt(selectedRow, 0);
+
                     JTextField frontField = new JTextField();
                     JTextField backField = new JTextField();
                     JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
@@ -127,11 +140,10 @@ public class MainScreen extends JFrame {
                         String back = backField.getText();
 
                         if (!front.isEmpty() && !back.isEmpty()) {
-                            int deckId = (int) table.getValueAt(selectedRow, 0);
-                            String deckName = table.getValueAt(selectedRow, 1).toString();
-                            System.out.println("Deck: " + deckName);
-                            System.out.println("Front: " + front);
-                            System.out.println("Back: " + back);
+                            CardDAO.insertCard(deckId, front, back);
+                            int currentAmount = (int) table.getValueAt(selectedRow, 2);
+                            table.setValueAt(currentAmount + 1, selectedRow, 2);
+                            JOptionPane.showMessageDialog(this, "Card Added");
                         }
                     }
                 });
@@ -168,9 +180,41 @@ public class MainScreen extends JFrame {
             }
         });
 
+        //====== BUTTON DELETE ====
+        JButton deleteBtn = new JButton("Delete Deck");
+        deleteBtn.setFont(font);
+        deleteBtn.putClientProperty("JButton.buttonType", "roundRect");
+        deleteBtn.putClientProperty("JComponent.arc", 30);
+        deleteBtn.setPreferredSize(new Dimension(160, 50));
+
+        deleteBtn.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if(selectedRow == -1)
+            {
+                JOptionPane.showMessageDialog(this,"Select a deck first!");
+                return;
+            }
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Are you sure you want to delete this deck?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION
+            );
+            if (confirm == JOptionPane.YES_OPTION) {
+                int deckId = (int) table.getValueAt(selectedRow, 0);
+
+                DeckDAO.deleteDeck(deckId);
+
+                model.removeRow(selectedRow);
+
+                JOptionPane.showMessageDialog(this, "Deck deleted!");
+            }
+        });
+
         JPanel bottomWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomWrapper.setBackground(Color.WHITE);
         bottomWrapper.add(createBtn);
+        bottomWrapper.add(deleteBtn);
 
         // ===== MAIN =====
         JPanel mainPanel = new JPanel(new BorderLayout());
