@@ -42,6 +42,12 @@ public class MainScreen extends JFrame {
             }
         };
         JTable table = new JTable(model);
+        table.setSelectionBackground(new Color(230, 230, 230));
+        table.setSelectionForeground(Color.BLACK);
+        table.setFocusable(false);
+        table.setRowSelectionAllowed(true);
+        table.setColumnSelectionAllowed(false);
+
         for(Object[] row : DeckDAO.getAllDecks())
         {
             model.addRow(row);
@@ -247,5 +253,12 @@ public class MainScreen extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
+
+        this.requestFocusInWindow();
+        createBtn.setFocusable(false);
+        deleteBtn.setFocusable(false);
+
+        createBtn.setFocusPainted(false);
+        deleteBtn.setFocusPainted(false);
     }
 }

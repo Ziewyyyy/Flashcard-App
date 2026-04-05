@@ -50,4 +50,36 @@ public class CardDAO {
 
         return list;
     }
+
+    public static void updateCard(int id, String front, String back){
+        String sql = "UPDATE cards SET front = ?, back = ? WHERE id = ?";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, front);
+            stmt.setString(2, back);
+            stmt.setInt(3, id);
+
+            stmt.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteCard(int cardId){
+        String sql = "DELETE FROM cards WHERE id = ?";
+
+        try(Connection conn = Database.getConnection())
+        {
+            try(PreparedStatement stmt1 = conn.prepareStatement(sql)) {
+                stmt1.setInt(1, cardId);
+                stmt1.executeUpdate();
+            }
+
+        } catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
 }
