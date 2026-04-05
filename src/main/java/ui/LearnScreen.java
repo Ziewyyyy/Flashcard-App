@@ -44,7 +44,7 @@ public class LearnScreen extends JFrame {
         studyBtn.setFocusPainted(false);
 
         studyBtn.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Start Learning...");
+            new FlashcardScreen(deckId);
         });
 
         buttonPanel.add(studyBtn);
