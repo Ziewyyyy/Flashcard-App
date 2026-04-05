@@ -42,11 +42,19 @@ public class FlashcardScreen extends JFrame{
         frontLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         backLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        frontLabel.setFont(new Font("Arial", Font.BOLD, 28));
-        backLabel.setFont(new Font("Arial", Font.PLAIN, 24));
+        frontLabel.setFont(new Font("Arial", Font.BOLD, 40));
+        backLabel.setFont(new Font("Arial", Font.BOLD, 40));
 
         cardPanel.add(Box.createVerticalGlue());
         cardPanel.add(frontLabel);
+        cardPanel.add(Box.createVerticalStrut(20));
+
+        //Separator
+        JSeparator separator = new JSeparator();
+        separator.setMaximumSize(new Dimension(400, 2));
+        cardPanel.add(separator);
+        cardPanel.add(Box.createVerticalStrut(20));
+
         cardPanel.add(Box.createRigidArea(new Dimension(0, 40)));
         cardPanel.add(backLabel);
         cardPanel.add(Box.createVerticalGlue());
