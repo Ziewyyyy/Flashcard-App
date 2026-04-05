@@ -1,31 +1,29 @@
 package database;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CardDAO {
-    public static void insertCard(int deckId, String front, String back)
-    {
+
+    public static void insertCard(int deckId, String front, String back) {
         String sql = "INSERT INTO cards(deck_id, front, back) VALUES (?, ?, ?)";
+
         try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, deckId);
             stmt.setString(2, front);
             stmt.setString(3, back);
-
             stmt.executeUpdate();
-
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static java.util.List<Object[]> getCardsByDeck(int deckId) {
-        java.util.List<Object[]> list = new java.util.ArrayList<>();
+    public static List<Object[]> getCardsByDeck(int deckId) {
+        List<Object[]> list = new ArrayList<>();
 
         String sql = "SELECT id, front, back FROM cards WHERE deck_id = ?";
 
@@ -33,15 +31,14 @@ public class CardDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, deckId);
-
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                int id = rs.getInt("id");
-                String front = rs.getString("front");
-                String back = rs.getString("back");
-
-                list.add(new Object[]{id, front, back});
+                list.add(new Object[]{
+                        rs.getInt("id"),
+                        rs.getString("front"),
+                        rs.getString("back")
+                });
             }
 
         } catch (Exception e) {
@@ -53,13 +50,13 @@ public class CardDAO {
 
     public static void updateCard(int id, String front, String back){
         String sql = "UPDATE cards SET front = ?, back = ? WHERE id = ?";
+
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, front);
             stmt.setString(2, back);
             stmt.setInt(3, id);
-
             stmt.executeUpdate();
 
         } catch (Exception e) {
@@ -70,15 +67,13 @@ public class CardDAO {
     public static void deleteCard(int cardId){
         String sql = "DELETE FROM cards WHERE id = ?";
 
-        try(Connection conn = Database.getConnection())
-        {
-            try(PreparedStatement stmt1 = conn.prepareStatement(sql)) {
-                stmt1.setInt(1, cardId);
-                stmt1.executeUpdate();
-            }
+        try(Connection conn = Database.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-        } catch(Exception e)
-        {
+            stmt.setInt(1, cardId);
+            stmt.executeUpdate();
+
+        } catch(Exception e) {
             e.printStackTrace();
         }
     }

@@ -1,6 +1,8 @@
 package database;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DeckDAO {
 
@@ -14,9 +16,7 @@ public class DeckDAO {
             stmt.executeUpdate();
 
             ResultSet rs = stmt.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
+            if (rs.next()) return rs.getInt(1);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -28,26 +28,25 @@ public class DeckDAO {
         String deleteCards = "DELETE FROM cards WHERE deck_id = ?";
         String deleteDeck = "DELETE FROM decks WHERE id = ?";
 
-        try(Connection conn = Database.getConnection())
-        {
+        try(Connection conn = Database.getConnection()) {
+
             try(PreparedStatement stmt1 = conn.prepareStatement(deleteCards)) {
                 stmt1.setInt(1, deckId);
                 stmt1.executeUpdate();
             }
 
-            try(PreparedStatement stmt2 = conn.prepareStatement(deleteDeck))
-            {
+            try(PreparedStatement stmt2 = conn.prepareStatement(deleteDeck)) {
                 stmt2.setInt(1, deckId);
                 stmt2.executeUpdate();
             }
-        } catch(Exception e)
-        {
+
+        } catch(Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static java.util.List<Object[]> getAllDecks() {
-        java.util.List<Object[]> list = new java.util.ArrayList<>();
+    public static List<Object[]> getAllDecks() {
+        List<Object[]> list = new ArrayList<>();
 
         String sql = """
             SELECT d.id, d.name, COUNT(c.id) AS amount
@@ -58,17 +57,22 @@ public class DeckDAO {
 
         try(Connection conn = Database.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery()){
-            while(rs.next())
-            {
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-                int amount = rs.getInt("amount");
-                list.add(new Object[]{id, name, amount, 0, "⚙"});
+            ResultSet rs = stmt.executeQuery()) {
+
+            while(rs.next()) {
+                list.add(new Object[]{
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getInt("amount"),
+                        0,
+                        "⚙"
+                });
             }
-        }catch (Exception e) {
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
+
         return list;
     }
 }

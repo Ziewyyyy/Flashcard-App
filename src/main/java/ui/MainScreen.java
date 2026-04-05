@@ -2,6 +2,7 @@ package ui;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import database.CardDAO;
+import database.Database;
 import database.DeckDAO;
 import database.InitDB;
 
@@ -10,9 +11,11 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.io.*;
 
 public class MainScreen extends JFrame {
 
+    private String dbPath;
     public MainScreen() {
         FlatLightLaf.setup();
         InitDB.init();
@@ -22,15 +25,41 @@ public class MainScreen extends JFrame {
         JMenu fileMenu = new JMenu("File");
         JMenu settingsMenu = new JMenu("Settings");
 
-        for (String name : new String[]{"Save", "Save As", "Import", "Export"}) {
-            JMenuItem item = new JMenuItem(name);
-            if (name.equals("Import")) fileMenu.addSeparator();
-            fileMenu.add(item);
-        }
+        JMenuItem importItem = new JMenuItem("Import");
+        JMenuItem exportItem = new JMenuItem("Export");
+        fileMenu.add(importItem);
+        fileMenu.add(exportItem);
 
-        menuBar.add(fileMenu);
-        menuBar.add(settingsMenu);
-        setJMenuBar(menuBar);
+        exportItem.addActionListener( e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            if(fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+            {
+                try {
+                    File file = fileChooser.getSelectedFile();
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+                    for(Object[] deck : DeckDAO.getAllDecks())
+                    {
+                        int deckId = (int) deck[0];
+                        String deckName = (String) deck[1];
+                        writer.write("DECK|" + deckName);
+                        writer.newLine();
+
+                        for(Object[] card : CardDAO.getCardsByDeck(deckId))
+                        {
+                            String front = (String) card[1];
+                            String back = (String) card[2];
+                            writer.write("CARD|" + front + "|" + back);
+                            writer.newLine();
+                        }
+                    }
+                    writer.close();
+                    JOptionPane.showMessageDialog(this, "Export success!");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
 
         String[] columns = {"ID", "Deck", "Amount", "Learn", "⚙"};
         Object[][] data = {};
@@ -41,6 +70,66 @@ public class MainScreen extends JFrame {
                 return column == 1;
             }
         };
+
+        importItem.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+
+            if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                try {
+                    File file = fileChooser.getSelectedFile();
+                    BufferedReader reader = new BufferedReader(new FileReader(file));
+
+                    String line;
+                    int currentDeckId = -1;
+
+                    while ((line = reader.readLine()) != null) {
+
+                        if (line.trim().isEmpty()) continue;
+
+                        String[] parts = line.split("\\|");
+
+                        if (parts.length < 2) continue;
+
+                        // DECK
+                        if (parts[0].equals("DECK")) {
+                            currentDeckId = DeckDAO.insertDeck(parts[1]);
+                            model.addRow(new Object[]{currentDeckId, parts[1], 0, 0, "⚙"});
+                        }
+
+                        // CARD
+                        else if (parts[0].equals("CARD")) {
+
+                            if (parts.length < 3) continue;
+
+                            String front = parts[1];
+                            String back = parts[2];
+
+                            CardDAO.insertCard(currentDeckId, front, back);
+
+                            // update amount
+                            for (int i = 0; i < model.getRowCount(); i++) {
+                                if ((int) model.getValueAt(i, 0) == currentDeckId) {
+                                    int amount = (int) model.getValueAt(i, 2);
+                                    model.setValueAt(amount + 1, i, 2);
+                                }
+                            }
+                        }
+                    }
+
+                    reader.close();
+                    JOptionPane.showMessageDialog(this, "Import success!");
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        menuBar.add(fileMenu);
+        menuBar.add(settingsMenu);
+        setJMenuBar(menuBar);
+
+
         JTable table = new JTable(model);
         table.setSelectionBackground(new Color(230, 230, 230));
         table.setSelectionForeground(Color.BLACK);
