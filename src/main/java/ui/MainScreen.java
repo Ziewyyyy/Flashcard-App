@@ -15,7 +15,8 @@ import java.io.*;
 
 public class MainScreen extends JFrame {
 
-    private String dbPath;
+    private int hoverRow = -1;
+    private int hoverCol = -1;
     public MainScreen() {
         FlatLightLaf.setup();
         InitDB.init();
@@ -188,6 +189,58 @@ public class MainScreen extends JFrame {
         JPanel tableWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
         tableWrapper.setBackground(Color.WHITE);
         tableWrapper.add(scrollPane);
+
+        // Chon deck
+        table.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(java.awt.event.MouseEvent e) {
+                hoverRow = table.rowAtPoint(e.getPoint());
+                hoverCol = table.columnAtPoint(e.getPoint());
+                table.repaint();
+            }
+        });
+
+        table.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus,
+                                                           int row, int column) {
+
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+
+                label.setHorizontalAlignment(JLabel.CENTER);
+
+                // Hover → gạch chân
+                if (row == hoverRow && column == hoverCol) {
+                    label.setText("<html><u>" + value.toString() + "</u></html>");
+                    label.setForeground(new Color(0, 102, 204));
+                    label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                } else {
+                    label.setText(value.toString());
+                    label.setForeground(Color.BLACK);
+                }
+
+                return label;
+            }
+        });
+
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt)
+            {
+                int row = table.rowAtPoint(evt.getPoint());
+                int col = table.columnAtPoint(evt.getPoint());
+
+                if (col == 1 && row != -1) {
+                    int deckId = (int) table.getValueAt(row, 0);
+                    String deckName = (String) table.getValueAt(row, 1);
+                    int amount = (int) table.getValueAt(row, 2);
+                    int learned = (int) table.getValueAt(row, 3);
+
+                    new LearnScreen(deckId, deckName, amount, learned);
+                }
+            }
+        });
 
         // ===== TOOLBAR =====
         JToolBar toolBar = new JToolBar();
