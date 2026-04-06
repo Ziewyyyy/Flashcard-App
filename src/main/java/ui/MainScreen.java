@@ -17,9 +17,22 @@ public class MainScreen extends JFrame {
 
     private int hoverRow = -1;
     private int hoverCol = -1;
+    private DefaultTableModel model;
+
+
+
     public MainScreen() {
         FlatLightLaf.setup();
         InitDB.init();
+
+        String[] columns = {"ID", "Deck", "Amount", "Learn", "⚙"};
+        Object[][] data = {};
+        model = new DefaultTableModel(data, columns){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 1;
+            }
+        };
 
         // ===== MENU =====
         JMenuBar menuBar = new JMenuBar();
@@ -64,15 +77,7 @@ public class MainScreen extends JFrame {
             }
         });
 
-        String[] columns = {"ID", "Deck", "Amount", "Learn", "⚙"};
-        Object[][] data = {};
 
-        DefaultTableModel model = new DefaultTableModel(data, columns){
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return column == 1;
-            }
-        };
 
         importItem.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -215,7 +220,8 @@ public class MainScreen extends JFrame {
 
                 label.setHorizontalAlignment(JLabel.CENTER);
 
-                // Hover → gạch chân
+                if (value == null) return label;
+
                 if (row == hoverRow && column == hoverCol) {
                     label.setText("<html><u>" + value.toString() + "</u></html>");
                     label.setForeground(new Color(0, 102, 204));
@@ -229,6 +235,8 @@ public class MainScreen extends JFrame {
             }
         });
 
+
+
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt)
             {
@@ -241,9 +249,10 @@ public class MainScreen extends JFrame {
                     int amount = (int) table.getValueAt(row, 2);
                     int learned = (int) table.getValueAt(row, 3);
 
-                    new LearnScreen(deckId, deckName, amount, learned);
+                    new LearnScreen(deckId, deckName, amount, learned, MainScreen.this::refreshTable);
                 }
             }
+
         });
 
         // ===== TOOLBAR =====
@@ -407,4 +416,15 @@ public class MainScreen extends JFrame {
         createBtn.setFocusPainted(false);
         deleteBtn.setFocusPainted(false);
     }
+
+    public void refreshTable() {
+        System.out.println("refreshTable called");
+        SwingUtilities.invokeLater(() -> {
+            model.setRowCount(0);
+            for (Object[] row : DeckDAO.getAllDecks()) {
+                model.addRow(row);
+            }
+        });
+    }
+
 }

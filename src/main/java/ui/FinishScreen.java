@@ -32,6 +32,7 @@ public class FinishScreen extends JFrame {
         closeBtn.setFocusPainted(false);
 
         closeBtn.addActionListener(e -> {
+            if (onClose != null) onClose.run();
             dispose();
         });
 

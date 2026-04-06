@@ -12,11 +12,6 @@
                     );
             """;
 
-            String alterDeck = """
-                ALTER TABLE decks ADD COLUMN learned INTEGER DEFAULT 0;
-        """;
-
-
             String cards = """
                     CREATE TABLE IF NOT EXISTS cards (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,5 +31,12 @@
                 e.printStackTrace();
             }
 
+            String alterDeck = "ALTER TABLE decks ADD COLUMN learned INTEGER DEFAULT 0";
+            try (Connection conn = Database.getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute(alterDeck);
+            } catch (Exception e) {
+
+            }
         }
     }

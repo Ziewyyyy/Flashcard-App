@@ -49,11 +49,11 @@ public class DeckDAO {
         List<Object[]> list = new ArrayList<>();
 
         String sql = """
-            SELECT d.id, d.name, COUNT(c.id) AS amount
-            FROM decks d
-            LEFT JOIN cards c ON d.id = c.deck_id
-            GROUP BY d.id
-        """;
+        SELECT d.id, d.name, COUNT(c.id) AS amount, d.learned
+        FROM decks d
+        LEFT JOIN cards c ON d.id = c.deck_id
+        GROUP BY d.id
+    """;
 
         try(Connection conn = Database.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -64,7 +64,7 @@ public class DeckDAO {
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getInt("amount"),
-                        0,
+                        rs.getInt("learned"),
                         "⚙"
                 });
             }

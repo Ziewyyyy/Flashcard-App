@@ -10,10 +10,12 @@ public class LearnScreen extends JFrame {
     private JLabel amountLabel;
     private JLabel learnedLabel;
     private int deckId;
+    private Runnable onCloseMain;
 
-    public LearnScreen(int deckId, String deckName, int amount, int learned)
+    public LearnScreen(int deckId, String deckName, int amount, int learned, Runnable onCloseMain)
     {
         this.deckId = deckId;
+        this.onCloseMain = onCloseMain;
 
         setTitle("Learn - " + deckName);
         setSize(500, 300);
@@ -52,16 +54,10 @@ public class LearnScreen extends JFrame {
 
         studyBtn.addActionListener(e -> {
             DeckDAO.updateLearned(deckId, 0);
+            Runnable callback = onCloseMain;
             dispose();
             new FlashcardScreen(deckId, () -> {
-                Object[] deck = DeckDAO.getDeckById(deckId);
-
-                new LearnScreen(
-                        deckId,
-                        (String) deck[1],
-                        (int) deck[2],
-                        (int) deck[3]
-                );
+                if (callback != null) callback.run();
             });
         });
 
