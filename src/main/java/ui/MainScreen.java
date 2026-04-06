@@ -53,6 +53,8 @@ public class MainScreen extends JFrame {
                             writer.write("CARD|" + front + "|" + back);
                             writer.newLine();
                         }
+                        writer.write("----");
+                        writer.newLine();
                     }
                     writer.close();
                     JOptionPane.showMessageDialog(this, "Export success!");
@@ -95,6 +97,8 @@ public class MainScreen extends JFrame {
                         if (parts[0].equals("DECK")) {
                             currentDeckId = DeckDAO.insertDeck(parts[1]);
                             model.addRow(new Object[]{currentDeckId, parts[1], 0, 0, "⚙"});
+
+                            model.addRow(new Object[]{"", "", "", "", ""});
                         }
 
                         // CARD

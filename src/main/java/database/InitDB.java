@@ -7,9 +7,15 @@
             String decks = """
                     CREATE TABLE IF NOT EXISTS decks (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        name TEXT NOT NULL
+                        name TEXT NOT NULL,
+                        learned INTEGER DEFAULT 0
                     );
             """;
+
+            String alterDeck = """
+                ALTER TABLE decks ADD COLUMN learned INTEGER DEFAULT 0;
+        """;
+
 
             String cards = """
                     CREATE TABLE IF NOT EXISTS cards (

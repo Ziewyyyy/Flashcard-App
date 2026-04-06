@@ -1,11 +1,20 @@
 package ui;
 
+import database.DeckDAO;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class LearnScreen extends JFrame {
+
+    private JLabel amountLabel;
+    private JLabel learnedLabel;
+    private int deckId;
+
     public LearnScreen(int deckId, String deckName, int amount, int learned)
     {
+        this.deckId = deckId;
+
         setTitle("Learn - " + deckName);
         setSize(500, 300);
         setLocationRelativeTo(null);
@@ -15,13 +24,12 @@ public class LearnScreen extends JFrame {
 
         JPanel topPanel = new JPanel(new BorderLayout());
 
-        // Info
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new GridLayout(3, 1, 5, 5));
 
         JLabel nameLabel = new JLabel("Deck: " + deckName);
-        JLabel amountLabel = new JLabel("Amount: " + amount);
-        JLabel learnedLabel = new JLabel("Learned: " + learned);
+        amountLabel = new JLabel("Amount: " + amount);
+        learnedLabel = new JLabel("Learned: " + learned);
 
         Font font = new Font("Arial", Font.BOLD, 22);
         nameLabel.setFont(font);
@@ -32,7 +40,6 @@ public class LearnScreen extends JFrame {
         infoPanel.add(amountLabel);
         infoPanel.add(learnedLabel);
 
-        //Button
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 
         JButton studyBtn = new JButton("Study Now");
@@ -44,7 +51,18 @@ public class LearnScreen extends JFrame {
         studyBtn.setFocusPainted(false);
 
         studyBtn.addActionListener(e -> {
-            new FlashcardScreen(deckId);
+            DeckDAO.updateLearned(deckId, 0);
+            dispose();
+            new FlashcardScreen(deckId, () -> {
+                Object[] deck = DeckDAO.getDeckById(deckId);
+
+                new LearnScreen(
+                        deckId,
+                        (String) deck[1],
+                        (int) deck[2],
+                        (int) deck[3]
+                );
+            });
         });
 
         buttonPanel.add(studyBtn);
@@ -56,5 +74,17 @@ public class LearnScreen extends JFrame {
 
         add(mainPanel);
         setVisible(true);
+    }
+
+    private void refreshData() {
+        SwingUtilities.invokeLater(() -> {
+            Object[] deck = DeckDAO.getDeckById(deckId);
+
+            int amount = (int) deck[2];
+            int learned = (int) deck[3];
+
+            amountLabel.setText("Amount: " + amount);
+            learnedLabel.setText("Learned: " + learned);
+        });
     }
 }

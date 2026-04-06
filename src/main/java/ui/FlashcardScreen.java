@@ -1,26 +1,32 @@
 package ui;
-import com.formdev.flatlaf.FlatLightLaf;
+
 import database.CardDAO;
 import database.DeckDAO;
-import database.InitDB;
 
-import javax.swing.table.DefaultTableModel;
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.List;
 
-public class FlashcardScreen extends JFrame{
+public class FlashcardScreen extends JFrame {
+
     private JLabel frontLabel;
     private JLabel backLabel;
+    private JLabel statsLabel;
+
     private List<Object[]> cards;
     private int currentIndex = 0;
-    public FlashcardScreen(int deckId)
-    {
+
+    private int deckId;
+    private Runnable onClose;
+
+    public FlashcardScreen(int deckId, Runnable onClose) {
+        this.deckId = deckId;
+        this.onClose = onClose;
+
         setTitle("Flashcard");
         setSize(1080, 720);
         setLocationRelativeTo(null);
+
         cards = CardDAO.getCardsByDeck(deckId);
 
         if (cards.isEmpty()) {
@@ -29,10 +35,11 @@ public class FlashcardScreen extends JFrame{
             return;
         }
 
-        //Card Panel
+        // ===== MAIN PANEL =====
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
+        // ===== CARD PANEL =====
         JPanel cardPanel = new JPanel();
         cardPanel.setLayout(new BoxLayout(cardPanel, BoxLayout.Y_AXIS));
 
@@ -49,18 +56,28 @@ public class FlashcardScreen extends JFrame{
         cardPanel.add(frontLabel);
         cardPanel.add(Box.createVerticalStrut(20));
 
-        //Separator
+        // ===== SEPARATOR =====
         JSeparator separator = new JSeparator();
         separator.setMaximumSize(new Dimension(400, 2));
         cardPanel.add(separator);
         cardPanel.add(Box.createVerticalStrut(20));
 
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 40)));
         cardPanel.add(backLabel);
         cardPanel.add(Box.createVerticalGlue());
 
-        //Button
+        // ===== BOTTOM PANEL =====
         JPanel bottomPanel = new JPanel();
+        bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
+
+        // ===== STATS =====
+        statsLabel = new JLabel();
+        statsLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        statsLabel.setHorizontalAlignment(JLabel.CENTER);
+        statsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        statsLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+        // ===== BUTTON =====
+        JPanel buttonPanel = new JPanel();
 
         JButton showBtn = new JButton("Show Answer");
         JButton nextBtn = new JButton("Next");
@@ -73,12 +90,16 @@ public class FlashcardScreen extends JFrame{
         }
 
         showBtn.addActionListener(e -> showAnswer());
-
         nextBtn.addActionListener(e -> nextCard());
 
-        bottomPanel.add(showBtn);
-        bottomPanel.add(nextBtn);
+        buttonPanel.add(showBtn);
+        buttonPanel.add(nextBtn);
 
+        bottomPanel.add(statsLabel);
+        bottomPanel.add(Box.createVerticalStrut(10));
+        bottomPanel.add(buttonPanel);
+
+        // ===== ADD =====
         mainPanel.add(cardPanel, BorderLayout.CENTER);
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -89,16 +110,19 @@ public class FlashcardScreen extends JFrame{
         setVisible(true);
     }
 
+    // ===== LOAD CARD =====
     private void loadCard() {
         Object[] card = cards.get(currentIndex);
 
         String front = (String) card[1];
-        String back = (String) card[2];
-
         frontLabel.setText(front);
+
         backLabel.setText("");
+
+        updateStats();
     }
 
+    // ===== SHOW ANSWER =====
     private void showAnswer() {
         Object[] card = cards.get(currentIndex);
         String back = (String) card[2];
@@ -106,15 +130,34 @@ public class FlashcardScreen extends JFrame{
         backLabel.setText(back);
     }
 
+    // ===== NEXT CARD =====
     private void nextCard() {
         currentIndex++;
 
         if (currentIndex >= cards.size()) {
-            JOptionPane.showMessageDialog(this, "You finished!");
+            DeckDAO.updateLearned(deckId, cards.size());
+
+            new FinishScreen(() -> {
+                if (onClose != null) onClose.run();
+            });
+
             dispose();
             return;
         }
 
+        DeckDAO.updateLearned(deckId, currentIndex);
+
         loadCard();
+    }
+
+    // ===== UPDATE STATS =====
+    private void updateStats() {
+        int learned = currentIndex;
+        int remaining = cards.size() - currentIndex;
+
+        statsLabel.setText(
+                "<html><b>Learned:</b> " + learned +
+                        " &nbsp;&nbsp;&nbsp; <b>Remaining:</b> " + remaining + "</html>"
+        );
     }
 }
